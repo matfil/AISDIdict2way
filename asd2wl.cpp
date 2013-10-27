@@ -215,7 +215,19 @@ void Dict2WList::del(const Key& k)										//Implementacja metody Dict2WList::d
 
 std::string Dict2WList::convert() const
 {
-	return "a";
+	std::string output;
+	Node *i;
+	i = first;
+	while (i != nullptr)
+	{
+		output.append(to_string(*(i->k)));
+		output.push_back(' ');
+		output.append(i->v);
+		output.append("\n");
+		i = i->next;
+	}
+	return output;
+	
 }
 
 void Dict2WList::unsafeins(const Key& k, const Value& val)
@@ -243,7 +255,16 @@ DictArray DA;
     return DA.self_test(1);
 	*/
 Dict2WList DL;
+std::cout << DL.convert();
 DL.insert(1,"test1");
+DL.insert(2,"test2");
+DL.insert(3,"test3");
+std::cout << DL.convert()<<endl;
+DL.del(2);
+std::cout << DL.convert();
+DL.del(55555);
+std::cout << DL.convert();
+
 
 	return 0;
 }

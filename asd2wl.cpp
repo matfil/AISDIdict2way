@@ -78,6 +78,7 @@ private:
 	int NoElements;													//Ilość elementów (Number of Elements)
 };
 
+/*bo listy inicjalizacyjne na więcej niż 2 elementy są nieczytelne*/
 Dict2WList::Node::Node()											//Implementacja konstruktora struktury Dict2WList::Node
 {
 	k = 0;
@@ -100,6 +101,13 @@ Dict2WList::Dict2WList()											//Implementacja konstruktora klasy Dict2WList
 	first = nullptr;
 	last = nullptr;
 	NoElements = 0;
+}
+	
+bool Dict2WList::struct_eq(const Dict2WList& DL);					//Implementacja metody Dict2WList::struct_eq
+{
+	if (this->conert() == DL.convert())			//Oba słowniki zostają przekonwertowane na stringi i porównane
+		return true;
+	return false;
 }
 
 
@@ -138,6 +146,11 @@ void Dict2WList::insert(const Key& k, const Value& val)				//Implementacja metod
 					break;						//I również kończę sprawę
 				}//else
 			}//if (k < i->k)
+			if (k == i->k)						//Sprawdzam czy nie następuje wstawianie wielu takich samych kluczy
+			{
+				std::cout<<"Wstawianie do słownika dwóch elementów o tym samym kluczu jest zakazane";
+				return;
+			}
 			i = i->next;						//Jednak gdy klucz jest większy to przechodzę do kolejnego węzła
 		}//while (i != nullptr)					//I powtarzam działanie
 		if (i == nullptr)						//W przypadku gdy klucz wstawianego elementu jest większy od wszystkich innych
@@ -153,15 +166,15 @@ void Dict2WList::insert(const Key& k, const Value& val)				//Implementacja metod
 Dict2WList::Node* Dict2WList::find(const Key& k) const					//Implementacja metody Dict2WList::find
 {
 	Node *i;
-	i = first;
-	while (i != nullptr)
+	i = first;									//W dosyć oczywisty sposób zaczynam szukać na początku listy
+	while (i != nullptr)						//Dopóki mam jakieś niesprawdzone elementy
 	{
-		if (i->k == k)
-			return i;
+		if (i->k == k)							//Porównuję wartości kluczy
+			return i;							//Gdy są równe zwracam wskaźnik na sprawdzany element
 		else
-			i = i->next;
+			i = i->next;						//a gdy nie są to przechodzę do kolejnego
 	}//while (i != nullptr)
-	return nullptr;
+	return nullptr;								//W przypadku gdy skończą mi się elementy w liście to zwracam nullptr
 }
 
 bool Dict2WList::exists(const Key& k)									//Implementacja metody Dict2WList::exists
@@ -190,6 +203,13 @@ void Dict2WList::del(const Key& k)										//Implementacja metody Dict2WList::d
 	i = this->find(k);							//Powiedzmy, że pożądany element się znalazł
 	if (i != nullptr)
 	{
+		if (i->prev == nullptr && i->next == nullptr)
+		{										//W przypadku gdy jest jedynym elementem
+			first = nullptr;
+			last = nullptr;						//First i last dostaja wartosc nullptr
+			delete i;							//a pamięć zostaje zwolniona
+			return;								//Koniec
+		}
 		if (i->prev == nullptr)					//Gdy nie ma poprzednika to wiem, że jest pierwszym
 		{
 			first = i->next;					//Więc jego następnik robi się nowym pierwszym
@@ -197,34 +217,33 @@ void Dict2WList::del(const Key& k)										//Implementacja metody Dict2WList::d
 			delete i;							//i w tym momencie mogę zapomnieć o elemencie
 			return;								//Koniec
 		}
-		if (i->next == nullptr)
+		if (i->next == nullptr)					//Podoblie w przypadku gdy nie ma następnika. Wiem, że jest ostatnim
 		{
-			last = i->prev;
-			i->prev->next = nullptr;			
-			delete i;
-			return;
+			last = i->prev;						//Poprzednik robi się ostatnim
+			i->prev->next = nullptr;			//Następnik poprzednika NULLem
+			delete i;							//a element znika
+			return;								//Koniec
 		}
-		i->prev->next = i->next;
-		i->next->prev = i->prev;
-		delete i;
-		return;
+		i->prev->next = i->next;				//Następnik poprzednika to teraz następnik elementu
+		i->next->prev = i->prev;				//Poprzednik następnika to teraz poprzednik elementu
+		delete i;								//Element zostaje usunięty
+		return;									//i wszystko kończy się dobrze
 	}
-	
-
+												//a jak nie znaleziono właściwego elementu to nic się nie dzieje
 }
 
-std::string Dict2WList::convert() const
+std::string Dict2WList::convert() const									//Implementacja metody Dict2WList::convert
 {
 	std::string output;
 	Node *i;
-	i = first;
-	while (i != nullptr)
+	i = first;									//Zaczynam od początku listy
+	while (i != nullptr)						//Dopóki mam z czego czytać
 	{
-		output.append(to_string(*(i->k)));
-		output.push_back(' ');
-		output.append(i->v);
-		output.append("\n");
-		i = i->next;
+		output.append(to_string(*(i->k)));		//Dołącz na koniec wyjściowego stringa przekonwertowaną wartość klucza
+		output.push_back(' ');					//spację
+		output.append(i->v);					//wartość 
+		output.append("\n");					//i znak końca linii
+		i = i->next;							//Zmień wskazywany element na następnik aktualnie wskazywanego
 	}
 	return output;
 	
@@ -232,12 +251,16 @@ std::string Dict2WList::convert() const
 
 void Dict2WList::unsafeins(const Key& k, const Value& val)
 {
-
+	this -> insert (k,val)
 }
 
 Dict2WList::~Dict2WList()
 {
+	while(first != nullptr)
+		this->del(first->k);
 }
+
+/***********************************************************************************************************/
 
 int main() { 
 /*
@@ -262,9 +285,11 @@ DL.insert(3,"test3");
 std::cout << DL.convert()<<endl;
 DL.del(2);
 std::cout << DL.convert();
-DL.del(55555);
-std::cout << DL.convert();
+DL.del(1);
+DL.del(2);
+DL.del(3);
 
+std::cout << DL.convert();
 
 	return 0;
 }
